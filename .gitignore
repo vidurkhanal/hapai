@@ -1,2 +1,2 @@
-venv/
-py/src/auth/manifests/secret-map.yaml
+*/**/venv/
+*/**/manifests/secret-map.yaml
