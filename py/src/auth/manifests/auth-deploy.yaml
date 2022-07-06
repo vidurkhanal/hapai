@@ -9,22 +9,22 @@ spec:
   selector:
     matchLabels:
       app: auth
-    strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 3
-      template:
-        metadata:
-          labels:
-            app: auth
-        spec:
-          containers:
-            - name: auth
-              image: vidurkhanal/minisrv-auth
-              ports:
-                - containerPort: 5050
-              envFrom:
-                - configMapRef:
-                  name: auth-configmap
-                - secretRef:
-                  name: auth-secret
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 3
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+        - name: auth
+          image: vidurkhanal/minisrv-auth
+          ports:
+            - containerPort: 5050
+          envFrom:
+            - configMapRef:
+                name: auth-configmap
+            - secretRef:
+                name: auth-secret
