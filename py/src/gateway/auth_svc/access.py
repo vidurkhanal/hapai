@@ -11,6 +11,6 @@ def login(req):
     res = requests.post(
         f"http://{os.environ.get('AUTH_SVC_ADDRESS')}/login", auth=basicAuth)
     if res.status_code == 200:
-        return response.txt, None
+        return response.text, None
     else:
-        return None, (res.txt, res.status_code)
+        return None, (res.text, res.status_code)
