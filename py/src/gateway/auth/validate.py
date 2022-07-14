@@ -15,6 +15,6 @@ def token(req):
         f"http://{os.environ.get('AUTH_SVC_ADDRESS')}/validate", headers={"Authorization": token})
 
     if res.status_code == 200:
-        return res.txt, None
+        return res.text, None
     else:
-        return None, (res.txt, res.status_code)
+        return None, (res.text, res.status_code)

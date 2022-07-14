@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
-
+import datetime
+import json
 import os
+from time import timezone
 import bcrypt
 from flask import Flask, request
 import jwt
@@ -12,10 +13,10 @@ server = Flask(__name__)
 # DB INIT AND CONFIGS
 def get_db_connection():
     conn = psycopg2.connect(
-        host="localhost",
-        database="minisrv",
+        host=os.environ["POSTGRES_HOST"],
+        database=os.environ["DATABASE_NAME"],
         user=os.environ["DB_USERNAME"],
-        password=os.environ["DB_PASSWORD"],
+        password=os.environ["DATABASE_PASSWORD"],
     )
     return conn
 
@@ -25,8 +26,9 @@ def createJWT(unhashed_username, key, hasSpecialPrivileges):
     return jwt.encode(
         {
             "username": unhashed_username,
-            "exp": datetime.now(tz=datetime.utc) + timedelta(days=1),
-            "iat": datetime.utcnow(),
+            "exp": datetime.datetime.now(tz=datetime.timezone.utc)
+            + datetime.timedelta(days=1),
+            "iat": datetime.datetime.utcnow(),
             "isAdmin": hasSpecialPrivileges,
         },
         key,
@@ -47,16 +49,21 @@ def login():
     if not auth:
         return "missing credentials", 401
     cur = get_db_connection().cursor()
-    res = cur.execute(
-        "SELECT email,password from users WHERE email=%s", (auth.username)
+    cur.execute(
+        """SELECT username,password from users 
+        WHERE username=%s;""",
+        (auth.username,),
     )
+    res = cur.fetchone()
     if res:
-        data = cur.fetchone()
+        data = res
         email = data[0]
         password = data[1]
 
-        if auth.username != email or bcrypt.checkpw(auth.password, password):
-            return "invalid credentials", 401
+        if auth.username != email or not bcrypt.checkpw(
+            auth.password.encode("utf-8"), password.encode("utf-8")
+        ):
+            return json.dumps({"msg": "invalid credentials"}), 401
         else:
             return createJWT(auth.username, os.environ.get("JWT_KEY"), True)
     else:
