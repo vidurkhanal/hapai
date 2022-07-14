@@ -3,5 +3,7 @@ kind: ConfigMap
 metadata:
   name: auth-configmap
 data:
-  POSTGRES_HOST: host.minikube.internal
-  DATABASE_USERNAME: postgres
+  POSTGRES_HOST: ec2-54-173-251-17.compute-1.amazonaws.com
+  DATABASE_NAME: ddd25blkpfq83b
+  DB_USERNAME: mnjerkzpkslwdm
+
