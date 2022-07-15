@@ -14,6 +14,7 @@ server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
 
 mongo = PyMongo(server)
 
+# NEED TO TAKE A LOOK AT DB STRINGS
 fs = gridfs.GridFS(mongo.db)
 
 conn = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
@@ -43,7 +44,7 @@ def upload():
     if access['isAdmin']:
         if len(request.files) > 1 or len(request.files) < 1:
             return "exactly 1 file needed", 400
-
+        # POSSIBLE ERROR
         for _, f in request.files.items():
             err = util.upload(f, fs, channel, access)
 
