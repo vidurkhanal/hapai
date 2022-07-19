@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_pymongo import PyMongo
+from flask_pymongo import MongoClient
 import os
 import pika
 import json
@@ -10,12 +10,12 @@ from storage import util
 
 
 server = Flask(__name__)
-server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
-
-mongo = PyMongo(server)
+client = MongoClient(
+    "mongodb+srv://admin:" + os.environ.get("MONGO_PWD") + "@cluster0.mimv9.mongodb.net/?retryWrites=true&w=majority")
+db = client.videos
 
 # NEED TO TAKE A LOOK AT DB STRINGS
-fs = gridfs.GridFS(mongo.db)
+fs = gridfs.GridFS(db)
 
 conn = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
 channel = conn.channel()
