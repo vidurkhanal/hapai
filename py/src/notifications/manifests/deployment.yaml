@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: notifications
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 8
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+      - name: notifications
+        image: vidurkhanal/minisrv-notifications
+        envFrom:
+          - configMapRef:
+              name: notifications-config
+          - secretRef:
+              name: notifications-secret
+
+

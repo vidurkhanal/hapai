@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notifications-config
+  labels:
+    app: notifications
+data:
+  MP3_QUEUE : "mp3"
+  VIDEO_QUEUE : "video"
