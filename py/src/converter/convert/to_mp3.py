@@ -1,4 +1,3 @@
-from email import message
 import pika
 import json
 import tempfile
@@ -7,12 +6,12 @@ from bson.objectid import ObjectId
 import moviepy.editor
 
 
-def start(msg, fs_videos, fs_mp3, channel):
-    msg = json.loads(msg)
+def start(message, fs_videos, fs_mp3, channel):
+    message = json.loads(message)
 
     tf = tempfile.NamedTemporaryFile()
 
-    out = fs_videos.get(ObjectId(msg["video_fid"]))
+    out = fs_videos.get(ObjectId(message["video_fid"]))
 
     tf.write(out.read())
 
@@ -20,7 +19,7 @@ def start(msg, fs_videos, fs_mp3, channel):
     audio = moviepy.editor.VideoFileClip(tf.name).audio
     tf.close()
 
-    tf_path = tempfile.gettempdir() + f"/{msg['video_fid']}.mp3"
+    tf_path = tempfile.gettempdir() + f"/{message['video_fid']}.mp3"
     audio.write_audiofile(tf_path)
 
     # save file to Mongo
@@ -30,11 +29,11 @@ def start(msg, fs_videos, fs_mp3, channel):
     f.close()
     os.remove(tf_path)
 
-    message["mp3_field"] = str(fid)
+    message["mp3_fid"] = str(fid)
 
     try:
         channel.basic_publish(
-            exchane="",
+            exchange="",
             routing_key=os.environ.get("MP3_QUEUE"),
             body=json.dumps(message),
             properties=pika.BasicProperties(
@@ -43,4 +42,4 @@ def start(msg, fs_videos, fs_mp3, channel):
         )
     except Exception as err:
         fs_mp3.delete(fid)
-        return "failed to publish the mp3,err: "+err
+        return "failed to publish the mp3 "
