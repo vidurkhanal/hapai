@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from flask_pymongo import MongoClient
 import os
 import pika
@@ -7,18 +7,26 @@ import gridfs
 from auth_svc import access
 from auth import validate
 from storage import util
+from bson.objectid import ObjectId
 
 
 server = Flask(__name__)
 client = MongoClient(
     "mongodb+srv://admin:" + os.environ.get("MONGO_PWD") + "@cluster0.mimv9.mongodb.net/?retryWrites=true&w=majority")
-db = client.videos
+video_db = client.videos
+audio_db = client.mp3s
+
 
 # NEED TO TAKE A LOOK AT DB STRINGS
-fs = gridfs.GridFS(db)
+videos_fs = gridfs.GridFS(video_db)
+audios_fs = gridfs.GridFS(audio_db)
 
-conn = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
-channel = conn.channel()
+connection = pika.BlockingConnection(
+    pika.ConnectionParameters(
+        host="beaver-01.rmq.cloudamqp.com", credentials=pika.PlainCredentials(username=os.environ.get("RABBIT_USER"), password=os.environ.get("RABBIT_PWD")), heartbeat=600,
+        blocked_connection_timeout=300)
+)
+channel = connection.channel()
 
 
 @server.route("/", methods=["GET"])
@@ -41,12 +49,15 @@ def upload():
     access, err = validate.token(request)
     access = json.loads(access)
 
+    if err:
+        return err
+
     if access['isAdmin']:
         if len(request.files) > 1 or len(request.files) < 1:
             return "exactly 1 file needed", 400
         # POSSIBLE ERROR
         for _, f in request.files.items():
-            err = util.upload(f, fs, channel, access)
+            err = util.upload(f, videos_fs, channel, access)
 
             if err:
                 return err
@@ -58,7 +69,22 @@ def upload():
 
 @server.route("/download", methods=["POST"])
 def download():
-    pass
+    access, err = validate.token(request)
+    access = json.loads(access)
+
+    if err:
+        return err
+
+    if access['isAdmin']:
+        fid_string = request.args.get("fid")
+        if not fid_string:
+            return "FID is required...", 400
+        try:
+            out = audios_fs.get(ObjectId(fid_string))
+            return send_file(out, download_name=f'{fid_string}.mp3')
+        except Exception as err:
+            print(err, flush=True)
+            return "internal server error", 500
 
 
 if __name__ == "__main__":
