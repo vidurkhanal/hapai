@@ -23,7 +23,7 @@ audios_fs = gridfs.GridFS(audio_db)
 
 connection = pika.BlockingConnection(
     pika.ConnectionParameters(
-        host="beaver-01.rmq.cloudamqp.com", credentials=pika.PlainCredentials(username=os.environ.get("RABBIT_USER"), password=os.environ.get("RABBIT_PWD")), heartbeat=600,
+        "rabbitmq", heartbeat=600,
         blocked_connection_timeout=300)
 )
 channel = connection.channel()
@@ -67,7 +67,7 @@ def upload():
         return "Not Authorized", 400
 
 
-@server.route("/download", methods=["POST"])
+@server.route("/download", methods=["GET"])
 def download():
     access, err = validate.token(request)
     access = json.loads(access)

@@ -7,7 +7,7 @@ from send import email
 def main():
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(
-            host="beaver-01.rmq.cloudamqp.com", credentials=pika.PlainCredentials(username=os.environ.get("RABBIT_USER"), password=os.environ.get("RABBIT_PWD")), heartbeat=600,
+            "rabbitmq", heartbeat=600,
             blocked_connection_timeout=300)
     )
 
